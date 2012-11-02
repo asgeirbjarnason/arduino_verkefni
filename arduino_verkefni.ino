@@ -6,7 +6,7 @@ const int buttonPin = 12;
 
 boolean wait_state = false;
 unsigned long wait_start = 0;
-const unsigned long WAIT_THRESHOLD_TIME = 500;
+const unsigned long WAIT_THRESHOLD_TIME = 200;
 
 int current_num = 0;
 
@@ -24,14 +24,32 @@ byte colors[][3] = {
   {   0,   0,   0 }  // 9 --> light off
 };
 
+const int digits[][8] = {
+  {  LOW,  LOW,  LOW, HIGH, HIGH,  LOW,  LOW,  LOW }, // 0
+  { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH, HIGH,  LOW }, // 1
+  {  LOW,  LOW, HIGH, HIGH,  LOW, HIGH,  LOW,  LOW }, // 2
+  { HIGH,  LOW,  LOW, HIGH,  LOW, HIGH,  LOW,  LOW }, // 3
+  { HIGH, HIGH,  LOW, HIGH,  LOW,  LOW, HIGH,  LOW }, // 4
+  { HIGH,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW, HIGH }, // 5
+  {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW, HIGH }, // 6
+  { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH,  LOW,  LOW }, // 7
+  {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }, // 8
+  { HIGH, HIGH,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }  // 9
+};
+
 void color(byte* c);
 
 boolean button_press(unsigned long now); // To poll the button, with a guard against reading too many button clicks.
 void setup_button();
 
+void drawDigit(int digit);
+void setupDigitDisplay();
+
 void setup() {
  setup_button(buttonPin);
- color(colors[0]);
+ setup_digitDisplay();
+ color(colors[current_num]);
+ drawDigit(current_num);
 }
 
 void loop() {
@@ -40,6 +58,7 @@ void loop() {
   if (button_press(now)) {
     current_num = (current_num+1) % 10;
     color(colors[current_num]);
+    drawDigit(current_num);
   }
   
   delay(20);
@@ -71,4 +90,15 @@ boolean button_press(unsigned long now) {
     return true;
   }
   return false;
+}
+
+void drawDigit(int digit) {
+  for (int i = 0; i < 8; i++) { digitalWrite(i, digits[digit][i]); }
+}
+
+void setup_digitDisplay() {
+  for (int i = 0; i < 9; i++) {
+    pinMode(i, OUTPUT);
+    digitalWrite(i, HIGH);
+  }
 }
