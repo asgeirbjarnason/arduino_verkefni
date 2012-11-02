@@ -1,14 +1,14 @@
+// -------------------------------------------------------------------------- //
+//                               Static Data                                  //
+// -------------------------------------------------------------------------- //
+
+int current_num = 0;
+
+// ------------------------------------
+// Data for RGB LED.
 const int red_pin = 11;
 const int green_pin = 10;
 const int blue_pin = 9;
-
-const int button_pin = 12;
-
-boolean wait_state = false;
-unsigned long wait_start = 0;
-const unsigned long WAIT_THRESHOLD_TIME = 200;
-
-int current_num = 0;
 
 // The color combinations the assignment sheet told us were required, indexable to the right number.
 byte colors[][3] = {
@@ -23,7 +23,21 @@ byte colors[][3] = {
   {   0,   0,   0 }, // 8 --> light off
   {   0,   0,   0 }  // 9 --> light off
 };
+// ------------------------------------
 
+
+// ------------------------------------
+// Data for pushbutton.
+const int button_pin = 12;
+
+boolean wait_state = false;
+unsigned long wait_start = 0;
+const unsigned long WAIT_THRESHOLD_TIME = 200;
+// ------------------------------------
+
+
+// ------------------------------------
+// Data for 7 segment LED.
 const int digits[][8] = {
   {  LOW,  LOW,  LOW, HIGH, HIGH,  LOW,  LOW,  LOW }, // 0
   { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH, HIGH,  LOW }, // 1
@@ -36,15 +50,42 @@ const int digits[][8] = {
   {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }, // 8
   { HIGH, HIGH,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }  // 9
 };
+// ------------------------------------
 
+
+
+
+// -------------------------------------------------------------------------- //
+//                           Function declarations                            //
+// -------------------------------------------------------------------------- //
+
+// ------------------------------------
+// Functions for RGB LED.
 void color(byte* c);
+// ------------------------------------
 
+
+// ------------------------------------
+// Functions. for pushbutton.
 boolean button_press(unsigned long now); // To poll the button, with a guard against reading too many button clicks.
 void setup_button(int pin);
+// ------------------------------------
 
-void draw_digit(int digit);
+// ------------------------------------
+// Functions for 7 segment LED.
 void setup_digit_display();
+void draw_digit(int digit);
+// ------------------------------------
 
+
+
+
+// -------------------------------------------------------------------------- //
+//                           Function definitions                             //
+// -------------------------------------------------------------------------- //
+
+// ------------------------------------
+// Top level functions.
 void setup() {
  setup_button(button_pin);
  setup_digit_display();
@@ -63,13 +104,21 @@ void loop() {
   
   delay(20);
 }
+// ------------------------------------
 
+
+// ------------------------------------
+// Functions for RGB LED.
 void color(byte* c) {
   analogWrite(red_pin, c[0]);
   analogWrite(green_pin, c[1]);
   analogWrite(blue_pin, c[2]);
 }
+// ------------------------------------
 
+
+// ------------------------------------
+// Functions. for pushbutton.
 void setup_button(int pin) { pinMode(pin, INPUT); }
 
 boolean button_press(unsigned long now) {
@@ -86,7 +135,11 @@ boolean button_press(unsigned long now) {
   }
   return false;
 }
+// ------------------------------------
 
+
+// ------------------------------------
+// Functions for 7 segment LED.
 void draw_digit(int digit) {
   for (int i = 0; i < 8; i++) { digitalWrite(i, digits[digit][i]); }
 }
@@ -97,3 +150,5 @@ void setup_digit_display() {
     digitalWrite(i, HIGH);
   }
 }
+// ------------------------------------
+
