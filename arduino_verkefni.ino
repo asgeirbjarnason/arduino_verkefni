@@ -38,17 +38,21 @@ const unsigned long WAIT_THRESHOLD_TIME = 200;
 
 // ------------------------------------
 // Data for 7 segment LED.
+
+const int segment_count = 7;
+const int segment_pins[] = { 0, 1, 2, 4, 5, 6, 7 };
+
 const int digits[][8] = {
-  {  LOW,  LOW,  LOW, HIGH, HIGH,  LOW,  LOW,  LOW }, // 0
-  { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH, HIGH,  LOW }, // 1
-  {  LOW,  LOW, HIGH, HIGH,  LOW, HIGH,  LOW,  LOW }, // 2
-  { HIGH,  LOW,  LOW, HIGH,  LOW, HIGH,  LOW,  LOW }, // 3
-  { HIGH, HIGH,  LOW, HIGH,  LOW,  LOW, HIGH,  LOW }, // 4
-  { HIGH,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW, HIGH }, // 5
-  {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW, HIGH }, // 6
-  { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH,  LOW,  LOW }, // 7
-  {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }, // 8
-  { HIGH, HIGH,  LOW, HIGH,  LOW,  LOW,  LOW,  LOW }  // 9
+  {  LOW,  LOW,  LOW, HIGH,  LOW,  LOW,  LOW }, // 0
+  { HIGH, HIGH,  LOW, HIGH, HIGH, HIGH,  LOW }, // 1
+  {  LOW,  LOW, HIGH,  LOW, HIGH,  LOW,  LOW }, // 2
+  { HIGH,  LOW,  LOW,  LOW, HIGH,  LOW,  LOW }, // 3
+  { HIGH, HIGH,  LOW,  LOW,  LOW, HIGH,  LOW }, // 4
+  { HIGH,  LOW,  LOW,  LOW,  LOW,  LOW, HIGH }, // 5
+  {  LOW,  LOW,  LOW,  LOW,  LOW,  LOW, HIGH }, // 6
+  { HIGH, HIGH,  LOW, HIGH, HIGH,  LOW,  LOW }, // 7
+  {  LOW,  LOW,  LOW,  LOW,  LOW,  LOW,  LOW }, // 8
+  { HIGH, HIGH,  LOW,  LOW,  LOW,  LOW,  LOW }  // 9
 };
 // ------------------------------------
 
@@ -141,13 +145,16 @@ boolean button_press(unsigned long now) {
 // ------------------------------------
 // Functions for 7 segment LED.
 void draw_digit(int digit) {
-  for (int i = 0; i < 8; i++) { digitalWrite(i, digits[digit][i]); }
+  //for (int i = 0; i < 8; i++) { digitalWrite(i, digits[digit][i]); }
+  for (int i = 0; i < segment_count; i++) {
+    digitalWrite(segment_pins[i], digits[digit][i]);
+  }
 }
 
 void setup_digit_display() {
-  for (int i = 0; i < 9; i++) {
-    pinMode(i, OUTPUT);
-    digitalWrite(i, HIGH);
+  for (int i = 0; i < segment_count; i++) {
+    pinMode(segment_pins[i], OUTPUT);
+    digitalWrite(segment_pins[i], HIGH);
   }
 }
 // ------------------------------------
