@@ -70,6 +70,9 @@ const int INTERWORD_WAITTIME = DOT_TIME * 4; // See above for why this is not DO
 char morse_text[] = "sos ";
 char* morse_curr_pos = morse_text;
 
+int morse_current_token = 0;
+unsigned long morse_last_token_start;
+
 boolean (*tokens[5])(unsigned long, unsigned long);
 int token_count = 0;
 // ------------------------------------
@@ -102,7 +105,7 @@ void draw_digit(int digit);
 
 // ------------------------------------
 // Functions for the morse code.
-void setup_morse();
+void setup_morse(unsigned long now);
 
 boolean dot(unsigned long start, unsigned long current);
 boolean dash(unsigned long start, unsigned long current);
@@ -145,7 +148,7 @@ void morse_interword();
 
 boolean char2index(char& c);
 void morse_state_step();
-void morse_step();
+void morse_step(unsigned long now);
 // ------------------------------------
 
 
@@ -157,7 +160,8 @@ void morse_step();
 // ------------------------------------
 // Top level functions.
 void setup() {
- setup_morse();
+ unsigned long now = millis();
+ setup_morse(now);
  setup_button(button_pin);
  setup_digit_display();
  color(colors[current_num]);
@@ -173,7 +177,7 @@ void loop() {
     draw_digit(current_num);
   }
   
-  morse_step();
+  morse_step(now);
   
   delay(20);
 }
@@ -231,8 +235,9 @@ void setup_digit_display() {
 
 // ------------------------------------
 // Functions for the morse code.
-void setup_morse() {
+void setup_morse(unsigned long now) {
   pinMode(morse_pin, OUTPUT);
+  morse_last_token_start = now;
 }
 
 boolean dot(unsigned long start, unsigned long current) {
@@ -301,23 +306,16 @@ void morse_state_step() {
   }
 }
 
-void morse_step() {
-  static unsigned long last_start = 0;
-  static int current_token = 0;
-  
-  if (!last_start) { last_start = millis(); }
-  
-  unsigned long now = millis();
-  
-  if (current_token < token_count) {
-    if ((*tokens[current_token])(last_start, now)) {
-      last_start = millis();
-      ++current_token;
+void morse_step(unsigned long now) {
+  if (morse_current_token < token_count) {
+    if ((*tokens[morse_current_token])(morse_last_token_start, now)) {
+      morse_last_token_start = now;
+      ++morse_current_token;
     }
   }
   else {
     morse_state_step();
-    current_token = 0;
+    morse_current_token = 0;
   }
 }
 // ------------------------------------
