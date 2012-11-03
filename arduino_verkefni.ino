@@ -67,7 +67,7 @@ const int INTRALETTER_WAITTIME = DOT_TIME;
 const int INTERLETTER_WAITTIME = DOT_TIME * 2; // We will already have waited one DOT_TIME, because of the INTRALETTER_WAITTIME
 const int INTERWORD_WAITTIME = DOT_TIME * 4; // See above for why this is not DOT_TIME * 7
 
-char morse_text[] = "sos ";
+char morse_text[] = "We think we should get 12 for this assignment ";
 char* morse_curr_pos = morse_text;
 
 int morse_current_token = 0;
