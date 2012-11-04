@@ -30,7 +30,6 @@ byte colors[][3] = {
 // Data for pushbutton.
 const int button_pin = 12;
 
-boolean wait_state = false;
 unsigned long wait_start = 0;
 const unsigned long WAIT_THRESHOLD_TIME = 200;
 // ------------------------------------
@@ -278,15 +277,9 @@ void bw(byte intensity) {
 void setup_button(int pin) { pinMode(pin, INPUT); }
 
 boolean button_press(unsigned long now) {
-  // Turn off the guard against multiple clicks when the threshold time has been reached.
-  if (wait_state && (now - wait_start >= WAIT_THRESHOLD_TIME)) {
-    wait_state = false;
-  }
-  
-  // Only do the read if not in the wait state.
-  if (!wait_state && digitalRead(button_pin) == HIGH) {
-    wait_state = true; // Set the wait state up for the next invocation of this function.
-    wait_start = now; // Ditto for the wait start time.
+   //Turn on guard against multiple clicks by setting threshold time, during which button state is ignored
+   if ((now - wait_start) > WAIT_THRESHOLD_TIME && digitalRead(button_pin) == HIGH) { 
+     wait_start = millis();
     return true;
   }
   return false;
