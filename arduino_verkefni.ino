@@ -30,7 +30,7 @@ byte colors[][3] = {
 // Data for pushbutton.
 const int button_pin = 12;
 
-
+boolean wait_state = false;
 unsigned long wait_start = 0;
 const unsigned long WAIT_THRESHOLD_TIME = 200;
 // ------------------------------------
@@ -78,6 +78,25 @@ int token_count = 0;
 // ------------------------------------
 
 
+// ------------------------------------
+// Data for sleeping / light sensor.
+const int LIGHT_THRESHOLD = 500;
+const int photocell_pin = A0;
+
+const float twopi = 6.283185307f;
+const float threehalfspi = 4.71238898f;
+const float cycle_length = 5.0f;
+
+const int FELL_ASLEEP = 1;
+const int ASLEEP = 2;
+const int WOKE_UP = 4;
+const int AWAKE = 8;
+
+int last_sleep_state = AWAKE;
+unsigned long last_sleep_start;
+// ------------------------------------
+
+
 
 // -------------------------------------------------------------------------- //
 //                           Function declarations                            //
@@ -86,6 +105,7 @@ int token_count = 0;
 // ------------------------------------
 // Functions for RGB LED.
 void color(byte* c);
+void bw(byte intensity);
 // ------------------------------------
 
 
@@ -106,6 +126,9 @@ void draw_digit(int digit);
 // ------------------------------------
 // Functions for the morse code.
 void setup_morse(unsigned long now);
+
+void morse_fall_asleep(unsigned long now);
+void morse_wake_up(unsigned long now, unsigned long sleep_start_time);
 
 boolean dot(unsigned long start, unsigned long current);
 boolean dash(unsigned long start, unsigned long current);
@@ -152,34 +175,84 @@ void morse_step(unsigned long now);
 // ------------------------------------
 
 
+// ------------------------------------
+// Data for sleeping / light sensor.
+void setup_sleep(unsigned long now);
+
+int sleep_status();
+
+float sleep_cycle_position(unsigned long now, unsigned long start_time);
+byte sleep_light_intensity(unsigned long now, unsigned long start_time);
+
+void woke_up(unsigned long now);
+void fell_asleep(unsigned long now);
+// ------------------------------------
+
+
 
 // -------------------------------------------------------------------------- //
 //                           Function definitions                             //
 // -------------------------------------------------------------------------- //
 
 // ------------------------------------
-// Top level functions.
+// Top level and program flow functions.
 void setup() {
- unsigned long now = millis();
- setup_morse(now);
- setup_button(button_pin);
- setup_digit_display();
- color(colors[current_num]);
- draw_digit(current_num);
+  unsigned long now = millis();
+  setup_morse(now);
+  setup_button(button_pin);
+  setup_digit_display();
+  setup_sleep(now);
+  color(colors[current_num]);
+  draw_digit(current_num);
 }
 
 void loop() {
   unsigned long now = millis();
   
+  switch (sleep_status()) {
+    case FELL_ASLEEP:
+      fell_asleep(now);
+      // Deliberate fall through to next case.
+    case ASLEEP:
+      asleep(now);
+      break;
+    case WOKE_UP:
+      wake_up(now);
+      // Deliberate fall through to next case.
+    case AWAKE:
+      awake(now);
+      break;
+  }
+  
+  delay(20);
+}
+
+void wake_up(unsigned long now) {
+  bw(0);
+  draw_digit(current_num);
+  color(colors[current_num]);
+  morse_wake_up(now, last_sleep_start);
+}
+
+void awake(unsigned long now) {
   if (button_press(now)) {
     current_num = (current_num+1) % 10;
     color(colors[current_num]);
     draw_digit(current_num);
-  }
-  
+  }  
   morse_step(now);
-  
-  delay(20);
+}
+
+void fell_asleep(unsigned long now) {
+
+  turn_off_display();
+  morse_fall_asleep(now);
+
+  last_sleep_start = now;
+}
+
+void asleep(unsigned long now) {
+  bw(sleep_light_intensity(now, last_sleep_start) / 4 + 3);
 }
 // ------------------------------------
 
@@ -191,6 +264,12 @@ void color(byte* c) {
   analogWrite(green_pin, c[1]);
   analogWrite(blue_pin, c[2]);
 }
+
+void bw(byte intensity) {
+  analogWrite(red_pin, intensity);
+  analogWrite(green_pin, intensity);
+  analogWrite(blue_pin, intensity);
+}
 // ------------------------------------
 
 
@@ -199,9 +278,15 @@ void color(byte* c) {
 void setup_button(int pin) { pinMode(pin, INPUT); }
 
 boolean button_press(unsigned long now) {
-   //Turn on guard against multiple clicks by setting threshold time, during which button state is ignored
-   if ((now - wait_start) > WAIT_THRESHOLD_TIME && digitalRead(button_pin) == HIGH) { 
-     wait_start = millis();
+  // Turn off the guard against multiple clicks when the threshold time has been reached.
+  if (wait_state && (now - wait_start >= WAIT_THRESHOLD_TIME)) {
+    wait_state = false;
+  }
+  
+  // Only do the read if not in the wait state.
+  if (!wait_state && digitalRead(button_pin) == HIGH) {
+    wait_state = true; // Set the wait state up for the next invocation of this function.
+    wait_start = now; // Ditto for the wait start time.
     return true;
   }
   return false;
@@ -212,7 +297,6 @@ boolean button_press(unsigned long now) {
 // ------------------------------------
 // Functions for 7 segment LED.
 void draw_digit(int digit) {
-  //for (int i = 0; i < 8; i++) { digitalWrite(i, digits[digit][i]); }
   for (int i = 0; i < segment_count; i++) {
     digitalWrite(segment_pins[i], digits[digit][i]);
   }
@@ -221,6 +305,12 @@ void draw_digit(int digit) {
 void setup_digit_display() {
   for (int i = 0; i < segment_count; i++) {
     pinMode(segment_pins[i], OUTPUT);
+  }
+  turn_off_display();
+}
+
+void turn_off_display() {
+  for (int i = 0; i < segment_count; i++) {
     digitalWrite(segment_pins[i], HIGH);
   }
 }
@@ -232,6 +322,15 @@ void setup_digit_display() {
 void setup_morse(unsigned long now) {
   pinMode(morse_pin, OUTPUT);
   morse_last_token_start = now;
+}
+
+void morse_fall_asleep(unsigned long now) {
+  digitalWrite(morse_pin, LOW);
+}
+
+void morse_wake_up(unsigned long now, unsigned long sleep_start_time) {
+  unsigned long active_diff = sleep_start_time - morse_last_token_start;
+  morse_last_token_start = now + active_diff;
 }
 
 boolean dot(unsigned long start, unsigned long current) {
@@ -311,5 +410,38 @@ void morse_step(unsigned long now) {
     morse_state_step();
     morse_current_token = 0;
   }
+}
+// ------------------------------------
+
+
+// ------------------------------------
+// Data for sleeping / light sensor.
+void setup_sleep(unsigned long now) {
+  last_sleep_start = now;
+  pinMode(A0, INPUT);
+}
+
+int sleep_status() {
+  if (analogRead(photocell_pin) >= LIGHT_THRESHOLD) {
+    if (last_sleep_state == FELL_ASLEEP || last_sleep_state == ASLEEP) {
+      return last_sleep_state = ASLEEP;
+    }
+    return last_sleep_state = FELL_ASLEEP;
+  }
+  else if (last_sleep_state == WOKE_UP || last_sleep_state == AWAKE) {
+    return last_sleep_state = AWAKE;
+  }
+  return last_sleep_state = WOKE_UP;
+}
+
+float sleep_cycle_position(unsigned long now, unsigned long start_time) {
+  float offset = float(now - start_time) / 1000;
+  return offset / cycle_length * twopi + threehalfspi;
+}
+
+byte sleep_light_intensity(unsigned long now, unsigned long start_time) {
+  float cycle_pos = sleep_cycle_position(now, start_time);
+  float shifted_sin = float(sin(cycle_pos)) + 1;
+  return byte(shifted_sin * 128.0f - 0.99f); // -0.99f instead of -1.0f to avoid negative overflow.
 }
 // ------------------------------------
