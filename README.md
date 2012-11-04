@@ -1,6 +1,6 @@
 # arduino_verkefni
 
-Þetta er skilaverkefnið okkar (Ásgeir Bjarnason, Eyjólfur Kristjánsson, Vilborg Sveinsdóttir) í Arduino verkefninu í áfanganum T-109-INTO haustið 2012.
+Þetta er skilaverkefnið okkar (hópur: Ásgeir Bjarnason, Eyjólfur Kristjánsson og Vilborg Sveinsdóttir) í Arduino verkefninu í áfanganum T-109-INTO haustið 2012.
 
 Verkefnið okkar ætti að uppfylla öll skilyrðin í verkefnalýsingunni, en þar að auki gerir forritið eftirfarandi:
 
@@ -19,6 +19,12 @@ Með aðalforritunu (arduino_verkefni.ino) fylgja tvö fylgdarskjöl sem voru no
   * translation_table.txt: Skilgreiningarskjal á morse-kóða stafrófinu
   * translation.py: Python forrit sem býr til C kóða útfrá translation_table.txt.  
     Allur kóðinn í arduino_verkefni.ino milli `// --autogen--` taganna kom úr Python forritinu.
+
+Við erum með 2 youtube myndbönd sem sýna fram á virkni verkefnisins okkar:
+
+  * http://youtu.be/asKE5BN5YV8 sýnir grunnvirknina
+  * http://youtu.be/wLxzDiEbjro sýnir aukavirknina
+
 
 ## Uppsetningin á brauðbrettinu
 
